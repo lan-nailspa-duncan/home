@@ -155,7 +155,7 @@ nav {
     color: white;
 }
 .hero-card-logo { text-align: center; margin-bottom: 24px; }
-.hero-card-logo img { height: 100px; width: 100px; object-fit: contain; filter: brightness(0) invert(1); opacity: 0.92; }
+.hero-card-logo img { height: 100px; width: 100px; object-fit: contain; border-radius: 50%; background: white; padding: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
 .hero-card h3 { font-size: 1.2rem; text-align: center; margin-bottom: 22px; color: #e8b4f8; }
 .hero-info-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
 .hero-info-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 0.9rem; color: rgba(255,255,255,0.88); }
@@ -510,7 +510,7 @@ footer { background: #170d1f; color: rgba(255,255,255,0.7); padding: 56px 24px 2
 .footer-inner { max-width: 1140px; margin: 0 auto; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
 .footer-brand .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.footer-brand .logo-row img { height: 52px; filter: brightness(0) invert(1); opacity: 0.85; }
+.footer-brand .logo-row img { height: 52px; border-radius: 50%; background: white; padding: 3px; }
 .footer-brand .logo-row strong { font-family: 'Playfair Display', serif; font-size: 1.25rem; color: white; }
 .footer-brand p { font-size: 0.88rem; line-height: 1.8; }
 .social-row { display: flex; gap: 10px; margin-top: 20px; }
@@ -857,7 +857,7 @@ footer { background: #170d1f; color: rgba(255,255,255,0.7); padding: 56px 24px 2
                 <div class="email-success" id="emailSuccess">
                     <div class="success-icon">💌</div>
                     <h4>Message Sent!</h4>
-                    <p>Your email has opened in your mail app addressed to <strong>lannailspa@gmail.com</strong>. Please hit Send in your email client to complete. We look forward to hearing from you!</p>
+                    <p>Your message has been delivered to <strong>lannailspa@gmail.com</strong>. We'll reply to your email soon. Thank you for reaching out!</p>
                 </div>
             </div>
         </div>
@@ -1242,61 +1242,89 @@ function updateSelectedInfo() {
     }
 }
 
+/* ── WEB3FORMS ACCESS KEY ──────────────────────────────────────────
+   Get your free key at https://web3forms.com — enter lannailspa@gmail.com
+   and paste the key you receive here:
+──────────────────────────────────────────────────────────────────── */
+const W3F_KEY = '7a7592ae-6971-4b18-ac06-5725d8fff3a4';
+
 /* ── SUBMIT BOOKING ── */
-function submitBooking() {
+async function submitBooking() {
     const name    = document.getElementById('bkName').value.trim();
     const email   = document.getElementById('bkEmail').value.trim();
     const phone   = document.getElementById('bkPhone').value.trim();
     const service = document.getElementById('bkService').value;
     const notes   = document.getElementById('bkNotes').value.trim();
 
-    if (!name)    { alert('Please enter your name.'); return; }
-    if (!email)   { alert('Please enter your email address.'); return; }
-    if (!service) { alert('Please select a service.'); return; }
+    if (!name)         { alert('Please enter your name.'); return; }
+    if (!email)        { alert('Please enter your email address.'); return; }
+    if (!service)      { alert('Please select a service.'); return; }
     if (!selectedDate) { alert('Please select a date from the calendar.'); return; }
     if (!selectedTime) { alert('Please select a time slot.'); return; }
 
     const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
     const dateStr = selectedDate.toLocaleDateString('en-CA', opts);
 
-    // Build mailto body for lannailspa@gmail.com
-    const subject = encodeURIComponent(`Booking Request – ${service.split('–')[0].trim()} on ${dateStr}`);
-    const body = encodeURIComponent(
-        `Hello Lan Nails Spa,\n\nI would like to book an appointment. Here are my details:\n\n` +
+    const submitBtn = document.querySelector('#bookingForm .btn-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    const message =
+        `📅 APPOINTMENT REQUEST\n\n` +
         `Name:     ${name}\n` +
         `Email:    ${email}\n` +
         `Phone:    ${phone || 'Not provided'}\n` +
         `Service:  ${service}\n` +
         `Date:     ${dateStr}\n` +
         `Time:     ${selectedTime}\n` +
-        `Notes:    ${notes || 'None'}\n\n` +
-        `Please confirm my appointment. Thank you!\n\n${name}`
-    );
-    window.location.href = `mailto:lannailspa@gmail.com?subject=${subject}&body=${body}`;
+        `Notes:    ${notes || 'None'}`;
 
-    // Build Google Calendar link for customer
-    const yr  = selectedDate.getFullYear();
-    const mo  = String(selectedDate.getMonth()+1).padStart(2,'0');
-    const dy  = String(selectedDate.getDate()).padStart(2,'0');
-    const [timeStr, ampm] = selectedTime.split(' ');
-    let [h, m] = timeStr.split(':').map(Number);
-    if (ampm === 'PM' && h !== 12) h += 12;
-    if (ampm === 'AM' && h === 12) h = 0;
-    const startDt = `${yr}${mo}${dy}T${String(h).padStart(2,'0')}${String(m).padStart(2,'0')}00`;
-    const endH = String(h+1).padStart(2,'0');
-    const endDt = `${yr}${mo}${dy}T${endH}${String(m).padStart(2,'0')}00`;
+    try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                access_key: W3F_KEY,
+                subject: `Booking Request – ${service.split('–')[0].trim()} on ${dateStr} at ${selectedTime}`,
+                from_name: name,
+                email: email,
+                message: message,
+                botcheck: ''
+            })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Send failed');
 
-    const calTitle = encodeURIComponent(`Nail Appointment – Lan Nails Spa`);
-    const calDetails = encodeURIComponent(`Service: ${service}\nLan Nails Spa\n225 Canada Avenue, Duncan BC\n(778) 422-3749`);
-    const calLoc = encodeURIComponent('225 Canada Avenue, Duncan, BC V9L 1T6');
-    const gcalHref = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calTitle}&dates=${startDt}/${endDt}&details=${calDetails}&location=${calLoc}`;
+        // Build Google Calendar link for customer
+        const yr = selectedDate.getFullYear();
+        const mo = String(selectedDate.getMonth()+1).padStart(2,'0');
+        const dy = String(selectedDate.getDate()).padStart(2,'0');
+        const [timeStr2, ampm] = selectedTime.split(' ');
+        let [h, m] = timeStr2.split(':').map(Number);
+        if (ampm === 'PM' && h !== 12) h += 12;
+        if (ampm === 'AM' && h === 12) h = 0;
+        const startDt = `${yr}${mo}${dy}T${String(h).padStart(2,'0')}${String(m).padStart(2,'0')}00`;
+        const endDt   = `${yr}${mo}${dy}T${String(h+1).padStart(2,'0')}${String(m).padStart(2,'0')}00`;
+        const gcalHref = `https://calendar.google.com/calendar/render?action=TEMPLATE`
+            + `&text=${encodeURIComponent('Nail Appointment – Lan Nails Spa')}`
+            + `&dates=${startDt}/${endDt}`
+            + `&details=${encodeURIComponent('Service: '+service+'\nLan Nails Spa\n225 Canada Avenue, Duncan BC\n(778) 422-3749')}`
+            + `&location=${encodeURIComponent('225 Canada Avenue, Duncan, BC V9L 1T6')}`;
 
-    document.getElementById('gcalLink').href = gcalHref;
-    document.getElementById('successMsg').innerHTML =
-        `Your appointment request for <strong>${service.split('–')[0].trim()}</strong> on <strong>${dateStr} at ${selectedTime}</strong> has been sent to <strong>lannailspa@gmail.com</strong>. We'll confirm soon! Add it to your calendar:`;
+        document.getElementById('gcalLink').href = gcalHref;
+        document.getElementById('successMsg').innerHTML =
+            `Your appointment request for <strong>${service.split('–')[0].trim()}</strong> on <strong>${dateStr} at ${selectedTime}</strong> `
+            + `has been emailed to <strong>lannailspa@gmail.com</strong>. We'll confirm shortly! You can also add it to your calendar:`;
 
-    document.getElementById('bookingForm').style.display = 'none';
-    document.getElementById('bookingSuccess').classList.add('show');
+        document.getElementById('bookingForm').style.display = 'none';
+        document.getElementById('bookingSuccess').classList.add('show');
+
+    } catch (err) {
+        console.error(err);
+        alert('Sorry, something went wrong. Please call us at (778) 422-3749 to book.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Booking Request';
+    }
 }
 
 function resetBooking() {
@@ -1310,28 +1338,51 @@ function resetBooking() {
     document.getElementById('bkNotes').value = '';
     document.getElementById('selectedInfo').classList.remove('show');
     document.getElementById('timeSection').style.display = 'none';
+    const submitBtn = document.querySelector('#bookingForm .btn-submit');
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = `<svg width="18" height="18" fill="white" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg> Send Booking Request`; }
     renderCal();
 }
 
-/* ── EMAIL FORM ── */
-function submitEmail() {
+/* ── EMAIL / CONTACT FORM ── */
+async function submitEmail() {
     const name    = document.getElementById('emName').value.trim();
     const from    = document.getElementById('emFrom').value.trim();
-    const subject = document.getElementById('emSubject').value.trim() || 'Inquiry from website';
+    const subject = document.getElementById('emSubject').value.trim() || 'Website Inquiry – Lan Nails Spa';
     const message = document.getElementById('emMessage').value.trim();
 
     if (!name)    { alert('Please enter your name.'); return; }
     if (!from)    { alert('Please enter your email address.'); return; }
     if (!message) { alert('Please write a message.'); return; }
 
-    const sub = encodeURIComponent(subject);
-    const body = encodeURIComponent(
-        `Hello,\n\nMy name is ${name} and my email is ${from}.\n\n${message}\n\nThank you,\n${name}`
-    );
-    window.location.href = `mailto:lannailspa@gmail.com?subject=${sub}&body=${body}`;
+    const submitBtn = document.querySelector('#emailFormWrap .btn-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
 
-    document.getElementById('emailFormWrap').style.display = 'none';
-    document.getElementById('emailSuccess').classList.add('show');
+    try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                access_key: W3F_KEY,
+                subject: subject,
+                from_name: name,
+                email: from,
+                message: message,
+                botcheck: ''
+            })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Send failed');
+
+        document.getElementById('emailFormWrap').style.display = 'none';
+        document.getElementById('emailSuccess').classList.add('show');
+
+    } catch (err) {
+        console.error(err);
+        alert('Sorry, something went wrong. Please email us directly at lannailspa@gmail.com');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Message';
+    }
 }
 
 /* ── GALLERY LIGHTBOX ── */
