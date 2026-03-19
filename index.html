@@ -1329,7 +1329,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let bookedSlots = {};       // in-memory snapshot updated by Firebase listener
+let calBookings = [];       // times booked via Google Calendar (phone customers)
 let activeListener = null;  // currently watched date key
+
+const GCAL_SCRIPT = 'https://script.google.com/macros/s/AKfycbzOsVhprtuSASeXMw-mT0pKdJCnEpPXYOtLwS50O42463EhI1hoMjZb9G2UwKDfZfX9hA/exec';
 
 function encodeTime(t) { return t.replace(/:/g, '-').replace(/ /g, '_'); }
 
@@ -1337,10 +1340,22 @@ function listenToDate(dateKey) {
     if (activeListener) db.ref('bookings/' + activeListener).off();
     activeListener = dateKey;
     bookedSlots = {};
+    calBookings = [];
+
+    // Listen to Firebase bookings in real-time
     db.ref('bookings/' + dateKey).on('value', function(snap) {
         bookedSlots = snap.val() || {};
         showTimeSlots();
     });
+
+    // Fetch Google Calendar bookings (phone customers)
+    fetch(GCAL_SCRIPT + '?date=' + dateKey)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            calBookings = data.booked || [];
+            showTimeSlots();
+        })
+        .catch(function() { calBookings = []; });
 }
 
 function addBookedSlot(dateKey, time) {
@@ -1348,7 +1363,7 @@ function addBookedSlot(dateKey, time) {
 }
 
 function isSlotBooked(time) {
-    return bookedSlots[encodeTime(time)] === true;
+    return bookedSlots[encodeTime(time)] === true || calBookings.includes(time);
 }
 
 /* ── CALENDAR ── */
