@@ -1339,8 +1339,17 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let bookedSlots = {};       // in-memory snapshot updated by Firebase listener
-let calBookings = [];       // times booked via Google Calendar (phone customers)
+let calBusyRanges = [];     // busy ranges from Google Calendar [{start: mins, end: mins}]
 let activeListener = null;  // currently watched date key
+
+// Convert "10:30 AM" / "1:00 PM" to minutes since midnight
+function timeStrToMinutes(t) {
+    const [time, ampm] = t.split(' ');
+    let [h, m] = time.split(':').map(Number);
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return h * 60 + m;
+}
 
 const GCAL_SCRIPT = 'https://script.google.com/macros/s/AKfycbzOsVhprtuSASeXMw-mT0pKdJCnEpPXYOtLwS50O42463EhI1hoMjZb9G2UwKDfZfX9hA/exec';
 
@@ -1350,7 +1359,7 @@ function listenToDate(dateKey) {
     if (activeListener) db.ref('bookings/' + activeListener).off();
     activeListener = dateKey;
     bookedSlots = {};
-    calBookings = [];
+    calBusyRanges = [];
 
     // Listen to Firebase bookings in real-time
     db.ref('bookings/' + dateKey).on('value', function(snap) {
@@ -1358,14 +1367,25 @@ function listenToDate(dateKey) {
         showTimeSlots();
     });
 
-    // Fetch Google Calendar bookings (phone customers)
+    // Fetch Google Calendar busy ranges
     fetch(GCAL_SCRIPT + '?date=' + dateKey)
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            calBookings = data.booked || [];
+            if (data.busyRanges) {
+                // New format: [{start: minutes, end: minutes}, ...]
+                calBusyRanges = data.busyRanges;
+            } else if (data.booked) {
+                // Legacy format: array of time strings — treat each as a 30-min block
+                calBusyRanges = data.booked.map(function(t) {
+                    var s = timeStrToMinutes(t);
+                    return { start: s, end: s + 30 };
+                });
+            } else {
+                calBusyRanges = [];
+            }
             showTimeSlots();
         })
-        .catch(function() { calBookings = []; });
+        .catch(function() { calBusyRanges = []; });
 }
 
 function addBookedSlot(dateKey, time) {
@@ -1373,7 +1393,13 @@ function addBookedSlot(dateKey, time) {
 }
 
 function isSlotBooked(time) {
-    return bookedSlots[encodeTime(time)] === true || calBookings.includes(time);
+    if (bookedSlots[encodeTime(time)] === true) return true;
+    // Check if this 30-min slot overlaps any busy range from Google Calendar
+    var slotStart = timeStrToMinutes(time);
+    var slotEnd   = slotStart + 30;
+    return calBusyRanges.some(function(r) {
+        return slotStart < r.end && slotEnd > r.start;
+    });
 }
 
 /* ── CALENDAR ── */
