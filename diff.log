@@ -1,0 +1,52 @@
+diff --git a/index.html b/index.html
+index fbc2647..9589419 100644
+--- a/index.html
++++ b/index.html
+@@ -1736,14 +1736,17 @@ async function submitBooking() {
+     submitBtn.textContent = 'Sending…';
+ 
+     const message =
+-        `📅 APPOINTMENT REQUEST\n\n` +
+-        `Name:     ${name}\n` +
+-        `Email:    ${email}\n` +
+-        `Phone:    ${phone || 'Not provided'}\n` +
+-        `Service:  ${service}\n` +
+-        `Date:     ${dateStr}\n` +
+-        `Time:     ${selectedTime}\n` +
+-        `Notes:    ${notes || 'None'}`;
++        `Hi ${name},\n\n` +
++        `Thank you for booking with Lan Nails Spa! Here are your appointment details:\n\n` +
++        `  Service:  ${service}\n` +
++        `  Date:     ${dateStr}\n` +
++        `  Time:     ${selectedTime}\n` +
++        `  Phone:    ${phone || 'Not provided'}\n` +
++        `  Notes:    ${notes || 'None'}\n\n` +
++        `We will confirm your appointment shortly. If you have any questions, please call us at (778) 422-3749.\n\n` +
++        `— Lan Nails Spa\n` +
++        `  225 Canada Avenue, Duncan, BC V9L 1T6\n` +
++        `  (778) 422-3749`;
+ 
+     try {
+         const res = await fetch('https://api.web3forms.com/submit', {
+@@ -1751,9 +1754,10 @@ async function submitBooking() {
+             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+             body: JSON.stringify({
+                 access_key: W3F_KEY,
+-                subject: `Booking Request – ${service.split('–')[0].trim()} on ${dateStr} at ${selectedTime}`,
+-                from_name: name,
++                subject: `Booking Confirmation – ${service.split('–')[0].trim()} on ${dateStr} at ${selectedTime}`,
++                from_name: 'Lan Nails Spa',
+                 email: email,
++                cc: email,
+                 message: message,
+                 botcheck: ''
+             })
+@@ -1798,7 +1802,7 @@ async function submitBooking() {
+         document.getElementById('gcalLink').href = gcalHref;
+         document.getElementById('successMsg').innerHTML =
+             `Your appointment request for <strong>${service.split('–')[0].trim()}</strong> on <strong>${dateStr} at ${selectedTime}</strong> `
+-            + `has been emailed to <strong>lannailspa@gmail.com</strong>. We'll confirm shortly! You can also add it to your calendar:`;
++            + `has been received! A confirmation email has been sent to <strong>${email}</strong>. We'll confirm shortly! You can also add it to your calendar:`;
+ 
+         document.getElementById('bookingForm').style.display = 'none';
+         document.getElementById('bookingSuccess').classList.add('show');
