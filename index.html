@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>emailjs.init('w2qISjLJ947v1NjMm');</script>
 
 <style>
 /* ═══════════════════════════════════════════
@@ -1764,6 +1766,16 @@ async function submitBooking() {
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.message || 'Send failed');
+
+        // Send confirmation email to customer via EmailJS
+        emailjs.send('service_75rk2nv', 'template_3kt1yg8', {
+            to_email: email,
+            to_name:  name,
+            service:  service,
+            date:     dateStr,
+            time:     selectedTime,
+            notes:    notes || 'None'
+        }).catch(() => {});
 
         // Build Google Calendar link for customer
         const yr = selectedDate.getFullYear();
