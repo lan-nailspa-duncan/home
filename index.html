@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>emailjs.init('w2qISjLJ947v1NjMm');</script>
 
 <style>
 /* ═══════════════════════════════════════════
@@ -43,6 +45,8 @@
 
 html { scroll-behavior: smooth; }
 body { font-family: 'Nunito', sans-serif; color: var(--text); background: var(--white); line-height: 1.6; }
+
+
 h1,h2,h3,h4 { font-family: 'Playfair Display', serif; }
 a { color: inherit; }
 
@@ -625,76 +629,6 @@ footer { background: #170d1f; color: rgba(255,255,255,0.7); padding: 56px 24px 2
 }
 
 /* ═══════════════════════════════════════════
-   BIRTHDAY NOTIFICATION POPUP
-═══════════════════════════════════════════ */
-#bday-popup {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.65); z-index: 10000;
-    align-items: center; justify-content: center; padding: 20px;
-}
-#bday-popup.open { display: flex; }
-.bday-card {
-    position: relative; max-width: 520px; width: 100%;
-    border-radius: var(--radius-xl); overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    animation: bdayPop 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
-}
-@keyframes bdayPop {
-    from { opacity: 0; transform: scale(0.75); }
-    to   { opacity: 1; transform: scale(1); }
-}
-.bday-bg {
-    position: relative; height: 300px; overflow: hidden;
-}
-.bday-bg-img {
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    object-fit: cover; transition: opacity 1.2s ease;
-}
-.bday-bg-img.hidden { opacity: 0; }
-.bday-bg-overlay {
-    position: absolute; inset: 0;
-    background: linear-gradient(to bottom, rgba(90,30,104,0.25) 0%, rgba(26,10,34,0.7) 100%);
-    pointer-events: none;
-}
-.bday-body {
-    background: linear-gradient(135deg, #2d1a3d, #4a1a6b);
-    color: white; padding: 28px 32px 32px; text-align: center;
-}
-.bday-tag {
-    display: inline-block; background: rgba(255,255,255,0.15);
-    color: #e8b4f8; font-size: 0.72rem; font-weight: 800;
-    letter-spacing: 2.5px; text-transform: uppercase;
-    padding: 5px 16px; border-radius: var(--radius-pill);
-    border: 1px solid rgba(232,180,248,0.3); margin-bottom: 12px;
-}
-.bday-body h2 {
-    font-size: clamp(1.6rem, 5vw, 2.2rem); color: white;
-    margin-bottom: 10px; line-height: 1.2;
-}
-.bday-body p {
-    color: rgba(255,255,255,0.82); font-size: 0.95rem;
-    line-height: 1.75; margin-bottom: 22px;
-}
-.bday-close-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: white; color: var(--purple-dark);
-    padding: 12px 28px; border-radius: var(--radius-pill);
-    font-weight: 800; font-size: 0.9rem; border: none;
-    cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-}
-.bday-close-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); background: #f3e8f7; }
-.bday-x {
-    position: absolute; top: 12px; right: 14px;
-    background: rgba(0,0,0,0.35); border: none; color: white;
-    font-size: 1.5rem; line-height: 1; width: 34px; height: 34px;
-    border-radius: 50%; cursor: pointer; display: flex;
-    align-items: center; justify-content: center;
-    transition: background 0.2s; z-index: 2;
-}
-.bday-x:hover { background: rgba(0,0,0,0.6); }
-
-/* ═══════════════════════════════════════════
    FLOATING BUTTONS
 ═══════════════════════════════════════════ */
 .floating-btns { position: fixed; bottom: 22px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 900; }
@@ -735,23 +669,7 @@ footer { background: #170d1f; color: rgba(255,255,255,0.7); padding: 56px 24px 2
 </head>
 <body>
 
-<!-- ═══════ 9TH BIRTHDAY NOTIFICATION ═══════ -->
-<div id="bday-popup" role="dialog" aria-modal="true" aria-label="9th Anniversary Celebration">
-    <div class="bday-card">
-        <div class="bday-bg">
-            <img class="bday-bg-img" id="bdayImg1" src="Gallery/update1.jpeg" alt="9 Years Celebration">
-            <img class="bday-bg-img hidden" id="bdayImg2" src="Gallery/update2.jpeg" alt="9 Years Celebration">
-            <div class="bday-bg-overlay"></div>
-            <button class="bday-x" onclick="closeBday()" aria-label="Close">&times;</button>
-        </div>
-        <div class="bday-body">
-            <div class="bday-tag">🎉 Celebrating 9 Years</div>
-            <h2>Happy 9th Birthday,<br>Lan Nails Spa!</h2>
-            <p>Thank you to every amazing customer who has trusted us with their nails for 9 wonderful years. We are so grateful for your continued love and support in the Duncan community!</p>
-            <a href="#booking" class="bday-close-btn" onclick="closeBday()">📅 Book Now</a>
-        </div>
-    </div>
-</div>
+<!-- ═══════ 9TH ANNIVERSARY POPUP ═══════ -->
 
 <!-- ═══════ NAVBAR ═══════ -->
 <nav>
@@ -784,11 +702,11 @@ footer { background: #170d1f; color: rgba(255,255,255,0.7); padding: 56px 24px 2
     <div class="hero-bubble bubble-3"></div>
     <div class="hero-content">
         <div class="hero-left">
-            <div class="hero-tag">✨ Welcome to</div>
+            <div class="hero-tag">🎂 Celebrating 9 Years — Est. 2017</div>
             <h1>Lan Nails Spa</h1>
             <p class="hero-address">225 Canada Avenue, Duncan, BC</p>
             <p class="hero-tagline">Beautiful Nails, <em>Happy You</em></p>
-            <p class="hero-sub">9+ years serving the Duncan community. Walk-ins welcome!</p>
+            <p class="hero-sub">We just turned 9! Thank you Duncan for 9 amazing years of trust and beautiful nails. Walk-ins welcome!</p>
             <div class="hero-btns">
                 <a href="#booking" class="btn-hero-primary">
                     <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg>
@@ -1365,6 +1283,7 @@ footer { background: #170d1f; color: rgba(255,255,255,0.7); padding: 56px 24px 2
 ═══════════════════════════════════════════ -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
 /* ── SALON CAROUSEL ── */
 (function() {
@@ -1627,14 +1546,17 @@ async function submitBooking() {
     submitBtn.textContent = 'Sending…';
 
     const message =
-        `📅 APPOINTMENT REQUEST\n\n` +
-        `Name:     ${name}\n` +
-        `Email:    ${email}\n` +
-        `Phone:    ${phone || 'Not provided'}\n` +
-        `Service:  ${service}\n` +
-        `Date:     ${dateStr}\n` +
-        `Time:     ${selectedTime}\n` +
-        `Notes:    ${notes || 'None'}`;
+        `Hi ${name},\n\n` +
+        `Thank you for booking with Lan Nails Spa! Here are your appointment details:\n\n` +
+        `  Service:  ${service}\n` +
+        `  Date:     ${dateStr}\n` +
+        `  Time:     ${selectedTime}\n` +
+        `  Phone:    ${phone || 'Not provided'}\n` +
+        `  Notes:    ${notes || 'None'}\n\n` +
+        `We will confirm your appointment shortly. If you have any questions, please call us at (778) 422-3749.\n\n` +
+        `— Lan Nails Spa\n` +
+        `  225 Canada Avenue, Duncan, BC V9L 1T6\n` +
+        `  (778) 422-3749`;
 
     try {
         const res = await fetch('https://api.web3forms.com/submit', {
@@ -1642,15 +1564,26 @@ async function submitBooking() {
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify({
                 access_key: W3F_KEY,
-                subject: `Booking Request – ${service.split('–')[0].trim()} on ${dateStr} at ${selectedTime}`,
-                from_name: name,
+                subject: `Booking Confirmation – ${service.split('–')[0].trim()} on ${dateStr} at ${selectedTime}`,
+                from_name: 'Lan Nails Spa',
                 email: email,
+                cc: email,
                 message: message,
                 botcheck: ''
             })
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.message || 'Send failed');
+
+        // Send confirmation email to customer via EmailJS
+        emailjs.send('service_75rk2nv', 'template_3kt1yg8', {
+            to_email: email,
+            to_name:  name,
+            service:  service,
+            date:     dateStr,
+            time:     selectedTime,
+            notes:    notes || 'None'
+        }).catch(() => {});
 
         // Build Google Calendar link for customer
         const yr = selectedDate.getFullYear();
@@ -1689,7 +1622,7 @@ async function submitBooking() {
         document.getElementById('gcalLink').href = gcalHref;
         document.getElementById('successMsg').innerHTML =
             `Your appointment request for <strong>${service.split('–')[0].trim()}</strong> on <strong>${dateStr} at ${selectedTime}</strong> `
-            + `has been emailed to <strong>lannailspa@gmail.com</strong>. We'll confirm shortly! You can also add it to your calendar:`;
+            + `has been received! A confirmation email has been sent to <strong>${email}</strong>. We'll confirm shortly! You can also add it to your calendar:`;
 
         document.getElementById('bookingForm').style.display = 'none';
         document.getElementById('bookingSuccess').classList.add('show');
@@ -1813,41 +1746,6 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') moveLB(-1);
     if (e.key === 'ArrowRight') moveLB(1);
 });
-
-/* ── 9TH BIRTHDAY POPUP ── */
-(function() {
-    var img1, img2, showFirst = true, bdayTimer;
-    function cycleBdayBg() {
-        if (showFirst) {
-            img1.classList.remove('hidden');
-            img2.classList.add('hidden');
-        } else {
-            img2.classList.remove('hidden');
-            img1.classList.add('hidden');
-        }
-        showFirst = !showFirst;
-    }
-    window.closeBday = function() {
-        clearInterval(bdayTimer);
-        var popup = document.getElementById('bday-popup');
-        popup.classList.remove('open');
-        document.body.style.overflow = '';
-    };
-    document.addEventListener('DOMContentLoaded', function() {
-        img1 = document.getElementById('bdayImg1');
-        img2 = document.getElementById('bdayImg2');
-        setTimeout(function() {
-            document.getElementById('bday-popup').classList.add('open');
-            document.body.style.overflow = 'hidden';
-            bdayTimer = setInterval(cycleBdayBg, 3000);
-        }, 800);
-    });
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && document.getElementById('bday-popup').classList.contains('open')) {
-            window.closeBday();
-        }
-    });
-})();
 
 /* ── INIT ── */
 initCal();
