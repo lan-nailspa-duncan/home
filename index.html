@@ -1605,24 +1605,26 @@ async function submitBooking() {
         const dateKey = selectedDate.toISOString().split('T')[0];
         addBookedSlot(dateKey, selectedTime);
 
-        // Sync to Google Calendar
+        // Sync to Google Calendar and schedule 1-hour reminder
         fetch('https://script.google.com/macros/s/AKfycbzOsVhprtuSASeXMw-mT0pKdJCnEpPXYOtLwS50O42463EhI1hoMjZb9G2UwKDfZfX9hA/exec', {
             method: 'POST',
             body: JSON.stringify({
-                name:    name,
-                phone:   document.getElementById('bkPhone').value.trim(),
-                email:   email,
-                service: service,
-                date:    dateKey,
-                time:    selectedTime,
-                notes:   notes || ''
+                name:         name,
+                phone:        document.getElementById('bkPhone').value.trim(),
+                email:        email,
+                service:      service,
+                date:         dateKey,
+                time:         selectedTime,
+                notes:        notes || '',
+                sendReminder: true
             })
         }).catch(() => {}); // silent fail — booking email already sent
 
         document.getElementById('gcalLink').href = gcalHref;
         document.getElementById('successMsg').innerHTML =
             `Your appointment request for <strong>${service.split('–')[0].trim()}</strong> on <strong>${dateStr} at ${selectedTime}</strong> `
-            + `has been received! A confirmation email has been sent to <strong>${email}</strong>. We'll confirm shortly! You can also add it to your calendar:`;
+            + `has been received! A confirmation email has been sent to <strong>${email}</strong>. `
+            + `You will also receive a <strong>reminder email 1 hour before</strong> your appointment. We'll confirm shortly! You can also add it to your calendar:`;
 
         document.getElementById('bookingForm').style.display = 'none';
         document.getElementById('bookingSuccess').classList.add('show');
