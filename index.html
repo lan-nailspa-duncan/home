@@ -1397,7 +1397,7 @@ function listenToDate(dateKey) {
 }
 
 function claimSlot(dateKey, time) {
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
         db.ref('bookings/' + dateKey + '/' + encodeTime(time))
           .transaction(
             function(current) {
@@ -1405,7 +1405,8 @@ function claimSlot(dateKey, time) {
                 return true;
             },
             function(err, committed) {
-                resolve(committed === true);
+                if (err) reject(err); // Firebase error (permission/network) — not a booking conflict
+                else resolve(committed === true);
             }
           );
     });
@@ -1564,7 +1565,13 @@ async function submitBooking() {
 
     // Atomically claim the slot before sending any emails — prevents double-booking
     const dateKey = selectedDate.toISOString().split('T')[0];
-    const claimed = await claimSlot(dateKey, selectedTime);
+    let claimed;
+    try {
+        claimed = await claimSlot(dateKey, selectedTime);
+    } catch (fbErr) {
+        console.warn('Firebase slot claim error (proceeding anyway):', fbErr);
+        claimed = true; // Firebase unavailable — skip double-booking guard
+    }
     if (!claimed) {
         alert('Sorry, that time slot was just booked by someone else. Please choose another time.');
         submitBtn.disabled = false;
