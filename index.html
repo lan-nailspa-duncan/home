@@ -1348,6 +1348,7 @@ const db = firebase.database();
 let bookedSlots = {};       // in-memory snapshot updated by Firebase listener
 let calBusyRanges = [];     // busy ranges from Google Calendar [{start: mins, end: mins}]
 let activeListener = null;  // currently watched date key
+let calLoading = false;     // true while fetching Google Calendar busy ranges
 
 // Convert "10:30 AM" / "1:00 PM" to minutes since midnight
 function timeStrToMinutes(t) {
@@ -1358,7 +1359,7 @@ function timeStrToMinutes(t) {
     return h * 60 + m;
 }
 
-const GCAL_SCRIPT = 'https://script.google.com/macros/s/AKfycbzOsVhprtuSASeXMw-mT0pKdJCnEpPXYOtLwS50O42463EhI1hoMjZb9G2UwKDfZfX9hA/exec';
+const GCAL_SCRIPT = 'https://script.google.com/macros/s/AKfycbw9QdI4sHMOJRmu1YGyRICRqEp7ygo064L3y0k8VqCfRBTQDOYobJg3OxAI86GXLq2Ulg/exec';
 
 function encodeTime(t) { return t.replace(/:/g, '-').replace(/ /g, '_'); }
 
@@ -1367,6 +1368,7 @@ function listenToDate(dateKey) {
     activeListener = dateKey;
     bookedSlots = {};
     calBusyRanges = [];
+    calLoading = true;
 
     // Listen to Firebase bookings in real-time
     db.ref('bookings/' + dateKey).on('value', function(snap) {
@@ -1379,10 +1381,8 @@ function listenToDate(dateKey) {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.busyRanges) {
-                // New format: [{start: minutes, end: minutes}, ...]
                 calBusyRanges = data.busyRanges;
             } else if (data.booked) {
-                // Legacy format: array of time strings — treat each as a 30-min block
                 calBusyRanges = data.booked.map(function(t) {
                     var s = timeStrToMinutes(t);
                     return { start: s, end: s + 30 };
@@ -1390,13 +1390,25 @@ function listenToDate(dateKey) {
             } else {
                 calBusyRanges = [];
             }
+            calLoading = false;
             showTimeSlots();
         })
-        .catch(function() { calBusyRanges = []; });
+        .catch(function() { calBusyRanges = []; calLoading = false; showTimeSlots(); });
 }
 
-function addBookedSlot(dateKey, time) {
-    db.ref('bookings/' + dateKey + '/' + encodeTime(time)).set(true);
+function claimSlot(dateKey, time) {
+    return new Promise(function(resolve) {
+        db.ref('bookings/' + dateKey + '/' + encodeTime(time))
+          .transaction(
+            function(current) {
+                if (current === true) return; // abort — slot already taken
+                return true;
+            },
+            function(err, committed) {
+                resolve(committed === true);
+            }
+          );
+    });
 }
 
 function isSlotBooked(time) {
@@ -1487,6 +1499,11 @@ function selectDay(d) {
 function showTimeSlots() {
     const ts = document.getElementById('timeSection');
     ts.style.display = 'block';
+    if (calLoading) {
+        document.getElementById('timeSlots').innerHTML =
+            '<span style="color:var(--text-light);font-size:0.85rem;">⏳ Checking availability…</span>';
+        return;
+    }
     let html = TIMES.map(t => {
         const booked = isSlotBooked(t);
         if (booked) {
@@ -1545,6 +1562,16 @@ async function submitBooking() {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending…';
 
+    // Atomically claim the slot before sending any emails — prevents double-booking
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    const claimed = await claimSlot(dateKey, selectedTime);
+    if (!claimed) {
+        alert('Sorry, that time slot was just booked by someone else. Please choose another time.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<svg width="18" height="18" fill="white" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm0 18H5V8h14v13z"/></svg> Send Booking Request`;
+        return;
+    }
+
     const message =
         `Hi ${name},\n\n` +
         `Thank you for booking with Lan Nails Spa! Here are your appointment details:\n\n` +
@@ -1601,13 +1628,10 @@ async function submitBooking() {
             + `&details=${encodeURIComponent('Service: '+service+'\nLan Nails Spa\n225 Canada Avenue, Duncan BC\n250-891-3749')}`
             + `&location=${encodeURIComponent('225 Canada Avenue, Duncan, BC V9L 1T6')}`;
 
-        // Mark this slot as booked in Firebase
-        const dateKey = selectedDate.toISOString().split('T')[0];
-        addBookedSlot(dateKey, selectedTime);
-
         // Sync to Google Calendar and schedule 1-hour reminder
         fetch('https://script.google.com/macros/s/AKfycbzOsVhprtuSASeXMw-mT0pKdJCnEpPXYOtLwS50O42463EhI1hoMjZb9G2UwKDfZfX9hA/exec', {
             method: 'POST',
+            mode: 'no-cors',
             body: JSON.stringify({
                 name:         name,
                 phone:        document.getElementById('bkPhone').value.trim(),
