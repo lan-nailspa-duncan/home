@@ -1629,7 +1629,7 @@ async function submitBooking() {
             + `&location=${encodeURIComponent('225 Canada Avenue, Duncan, BC V9L 1T6')}`;
 
         // Sync to Google Calendar and schedule 1-hour reminder
-        fetch('https://script.google.com/macros/s/AKfycbzOsVhprtuSASeXMw-mT0pKdJCnEpPXYOtLwS50O42463EhI1hoMjZb9G2UwKDfZfX9hA/exec', {
+        fetch('https://script.google.com/macros/s/AKfycbz6U8t1zcpZ-gt6oSepMXL_0ZElmNgCHFt8noMu2UXsKoN29ALwj5e6KSxRbwnbOloMiA/exec', {
             method: 'POST',
             mode: 'no-cors',
             body: JSON.stringify({
